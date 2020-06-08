@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, ImageBackground, Image, StyleSheet, Text, KeyboardAvoidingView, Platform, TextInput} from 'react-native';
 import {Roboto_400Regular, Roboto_500Medium} from '@expo-google-fonts/roboto'
 import {Ubuntu_700Bold, useFonts} from '@expo-google-fonts/ubuntu'
@@ -6,16 +6,48 @@ import {AppLoading} from 'expo';
 import {RectButton} from 'react-native-gesture-handler';
 import {Feather as Icon} from '@expo/vector-icons'
 import {useNavigation} from '@react-navigation/native';
+import Picker from 'react-native-picker-select';
+import axios from 'axios';
+
+interface IBGEUF{
+  sigla: string
+}
+
+interface IBGECity{
+  nome: string
+}
 
 const Home = () => {
-    const [uf, setUF] = useState('');
-    const [city, setCity] = useState('');
+    const [uf, setUF] = useState(null);
+    const [city, setCity] = useState(null);
+    const [ufs, setUFS] = useState<String[]>([]);
+    const [cities, setCities] = useState<String[]>([]);
+
+    const [disabled, setDisabled] = useState(true);
 
     const navigation = useNavigation();
+
 
     function handleNavigationToPoints(){
         navigation.navigate('Points', {uf, city});
     }
+
+    useEffect(() => {
+      axios.get<IBGEUF[]>('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
+        .then(response => {
+          setUFS(response.data.map(uf => uf.sigla).sort());
+        });
+    },[])
+
+    //console.log(disable)
+
+    useEffect(() => {
+      axios.get<IBGECity[]>('https://servicodados.ibge.gov.br/api/v1/localidades/estados/'+uf+'/municipios')
+        .then(response => {
+          setCities(response.data.map(city => city.nome))
+        })
+      setDisabled(uf === null);
+    }, [uf])
 
     const [fontsLoaded] = useFonts({
         Roboto_400Regular,
@@ -42,10 +74,30 @@ const Home = () => {
             </View>
             
             <View style={styles.footer}>
-                <TextInput style={styles.input} placeholder='Digite a UF' value={uf}
-                  onChangeText={setUF} maxLength={2} autoCapitalize="characters" autoCorrect={false}/>
-                <TextInput style={styles.input} placeholder='Digite a cidade' value={city}
-                  onChangeText={setCity} autoCorrect={false}/>
+                {/* <TextInput style={styles.input} placeholder='Digite a UF' value={uf} onChangeText={setUF} maxLength={2} autoCapitalize="characters" autoCorrect={false}/> */}
+                  {/* SELECTOR AQUI */}
+                <Picker 
+                  placeholder={placeholderUF}
+                  useNativeAndroidPickerStyle={false}
+                  style={{inputAndroid: styles.picker,}}
+                  onValueChange={(value) => {setUF(value)}}
+                  items={ufs.map(uf => (
+                    {label: uf.toString(), value: uf.toString()}
+                  ))}
+                />
+                <Picker 
+                  disabled={disabled}
+                  placeholder={disabled ? placeholderCityDisabled : placeholderCity}
+                  value={city}
+                  useNativeAndroidPickerStyle={false}
+                  style={{inputAndroid: styles.picker,}}
+                  onValueChange={(value) => {setCity(value)}}
+                  items={cities.map(city => (
+                    {label: city.toString(), value: city.toString()}
+                  ))}
+                />
+                {/* <TextInput style={styles.input} placeholder='Digite a cidade' value={city} */}
+                  {/* onChangeText={setCity} autoCorrect={false}/> */}
                 <RectButton style={styles.button} onPress={handleNavigationToPoints}>
                 <View style={styles.buttonIcon}>
                 <Text><Icon name='arrow-right' color='#FFF' size={24}/></Text>
@@ -57,6 +109,24 @@ const Home = () => {
       </KeyboardAvoidingView>
     );
 };
+
+const placeholderUF = {
+  label: 'Selecione um Estado',
+  color: '#A0A0A0',
+  value: null
+}
+
+const placeholderCity = {
+  label: 'Selecione uma cidade',
+  color: '#A0A0A0',
+  value: null
+}
+
+const placeholderCityDisabled = {
+  label: 'Selecione um Estado antes',
+  color: '#A0A0A0',
+  value: null
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -89,6 +159,15 @@ const styles = StyleSheet.create({
     footer: {},
   
     select: {},
+
+    picker: {
+      height: 60,
+      backgroundColor: '#FFF',
+      borderRadius: 10,
+      marginBottom: 8,
+      paddingHorizontal: 24,
+      fontSize: 16,
+    },
   
     input: {
       height: 60,
