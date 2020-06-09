@@ -65,7 +65,7 @@ const CreatePoint = () => {
     useEffect(() => {
         axios.get<IBGEUFResponse[]>('https://servicodados.ibge.gov.br/api/v1/localidades/estados')
             .then(response => {
-                const ufInitials = response.data.map(uf => uf.sigla);
+                const ufInitials = response.data.map(uf => uf.sigla).sort();
                 setUfs(ufInitials);
             })
     }, []);
@@ -133,8 +133,10 @@ const CreatePoint = () => {
         
         await api.post('/points', data);
         //axios.post('http://localhost:3333', {})
-        alert('Ponto de coleta criado');
-        history.push('/');
+        //alert('Ponto de coleta criado');
+        history.push('/sucess');
+        //history.push('/');
+        
     }
 
     return (
@@ -219,7 +221,7 @@ const CreatePoint = () => {
                         ))}
                     </ul>
                 </fieldset>
-                <button type="submit">Cadastrar ponto de coleta</button>
+                <button type="submit" onClick={handleSubmit}>Cadastrar ponto de coleta</button>
             </form>
         </div>
     );
