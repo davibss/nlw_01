@@ -132,6 +132,7 @@ const CreatePoint = () => {
         }
         
         await api.post('/points', data);
+        console.log(data);
         //axios.post('http://localhost:3333', {})
         //alert('Ponto de coleta criado');
         history.push('/sucess');

@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {View, StyleSheet, TouchableOpacity, Text, ScrollView, Image, GestureResponderEvent, Alert} from  'react-native';
+import {View, StyleSheet, TouchableOpacity, Text, ScrollView, Image, GestureResponderEvent, Alert, PanResponder} from  'react-native';
 import Constants from 'expo-constants';
 import {Feather as Icon} from '@expo/vector-icons';
 import {useNavigation, useRoute} from '@react-navigation/native'
@@ -60,15 +60,19 @@ const Points = () => {
     },[]);
 
     useEffect(() => {
-      api.get('points', {
-        params: {
-          city: routeParams.city,
-          uf: routeParams.uf,
-          items: selectedItems
-        }
-      }).then(response => {
-        setPoints(response.data);
-      })
+      if (selectedItems.length !== 0){
+        api.get('points', {
+          params: {
+            city: routeParams.city,
+            uf: routeParams.uf,
+            items: selectedItems
+          }
+        }).then(response => {
+          setPoints(response.data);
+        })
+      } else {
+        setPoints([])
+      }
     },[selectedItems])
 
     function handleNavigationBack(){

@@ -1,5 +1,8 @@
 import knex from '../database/connection';
 import { Request, Response } from 'express';
+import pg from 'pg';
+pg.types.setTypeParser(1700, (value: string) => {
+    return parseFloat(value);})
 
 class PointController{
     async index(request: Request, response: Response){
@@ -21,7 +24,7 @@ class PointController{
         const serializedPoints = points.map(point => {
             return {
                 ...point,
-                image_url: `http://192.168.1.5:3333/uploads/${point.image}`
+                image_url: `https://ecoleta-davibss.herokuapp.com/uploads/${point.image}`
             };
         });
 
@@ -36,7 +39,7 @@ class PointController{
 
         const serializedPoint = {
             ...point,
-            image_url: `http://192.168.1.5:3333/uploads/${point.image}`
+            image_url: `https://ecoleta-davibss.herokuapp.com/uploads/${point.image}`
         };
 
         if (!point){
@@ -83,17 +86,19 @@ class PointController{
             uf,
         };
     
-        const insertedIds = await trx('points').insert(point);
+        const insertedIds = await trx('points').insert(point, ["id"]);
         //const insertedIds = await knex('points').insert(point);
-        const point_id = insertedIds[0];
+        console.log(insertedIds)
+        const point_id = insertedIds[0].id;
+
         const pointItens = items
-                                .split(',')
-                                .map((item: string) => Number(item.trim()))
-                                .map((item_id: number) => {
-            return {
-                item_id,
-                point_id: point_id
-            };
+            .split(',')
+            .map((item: string) => Number(item.trim()))
+            .map((item_id: number) => {
+                return {
+                    item_id,
+                    point_id: point_id
+                };
         });
     
         await trx('point_items').insert(pointItens);
